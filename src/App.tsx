@@ -1,35 +1,78 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
-import './App.css'
+import { useEffect, useRef, useState } from "react";
+import "./App.css";
+
+const formateTime = (date: Date): string => {
+  let h = date.getHours();
+  const m = date.getMinutes();
+  const s = date.getSeconds();
+  const ampm = h >= 12 ? "PM" : "AM";
+
+  h = h % 12;
+  if (h === 0) {
+    h = 12;
+  }
+
+  const mm = m < 10 ? `0${m}` : `${m}`;
+  const ss = s < 10 ? `0${s}` : `${s}`;
+  return `${h}:${mm}:${ss} ${ampm}`;
+};
 
 function App() {
-  const [count, setCount] = useState(0)
+  const [paused, setPause] = useState<boolean>(false);
+  const [now, setNow] = useState<Date>(() => new Date());
+
+  const timeRef = useRef<number | null>(null);
+
+  useEffect(() => {
+    if (timeRef.current !== null) {
+      clearInterval(timeRef.current);
+      timeRef.current = null;
+    }
+
+    if (paused) {
+      return;
+    }
+
+    timeRef.current = setInterval(() => {
+      setNow(new Date());
+    }, 1000);
+
+    return () => {
+      if (timeRef.current !== null) {
+        clearInterval(timeRef.current);
+        timeRef.current = null;
+      }
+    };
+  }, [paused]);
 
   return (
-    <>
+    <div className="app">
+      <h1>RELOJ</h1>
       <div>
-        <a href="https://vite.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
-      </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.tsx</code> and save to test HMR
+        <p style={{ color: `${paused ? "red" : "green"}` }}>
+          {formateTime(now)}
         </p>
+        <div className="containerbuttons">
+          <button
+            onClick={() => {
+              setPause(true);
+            }}
+            disabled={paused}
+          >
+            Pausar
+          </button>
+          <button
+            onClick={() => {
+              setPause(false);
+            }}
+            disabled={!paused}
+          >
+            Reanudar
+          </button>
+        </div>
       </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
-    </>
-  )
+    </div>
+  );
 }
 
-export default App
+export default App;
